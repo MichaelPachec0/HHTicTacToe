@@ -1,31 +1,26 @@
 /* 100devs tic-tac-toe js */
-https://github.com/Dev-Corinne/TicTacToe
+// https://github.com/Dev-Corinne/TicTacToe
 
 // Event listener for each cell.
 
-const grid = [...document.querySelectorAll(".box")];
-for (let i = 0; i < grid.length; i++){
-    grid[i].addEventListener("click", (i)=>{
-        console.log(i.target.id)
-    })
-}
+
 // Conditional - If three in a row are selected by either the user or AI. The game ends. If all squares are selected and three in a row does not occur. It is a draw.
 // Conditional - Three in a row means [0,1,2], [0,3,6], [0,4,8], [1,4,7], [2,5,8], [2,4,6], [3,4,5], or [6,7,8] all have the same value.
 // Horizontally => 0,1,2; 3,4,5; 6,7,8
 // Vertically => 0,3,6; 1,4,7; 2,5,8
 // Diagonally => 0,4,8; 2,4,6
-// Conditional - If any square is selected by either User or AI. The square cannot be reselected. 
+// Conditional - If any square is selected by either User or AI. The square cannot be reselected.
 // Conditional - The player and the ai can each only make one move per turn.
-// Conditional - 
+// Conditional -
 
 //DIRECTIONS
 //player's turn: player click adds square number to array 'playerMove'
 //bot move: bot adds random number to array 'botMove'
 
-let ticTacToe = [0,0,0,0,0,0,0,0,0]
-let playerMove = []
-let botMove = []
-let chooseRandom = Math.floor(Math.random()*9)
+// let ticTacToe = [0,0,0,0,0,0,0,0,0]
+// let playerMove = []
+// let botMove = []
+// let chooseRandom = Math.floor(Math.random()*9)
 
 /*
 0 1 2
@@ -45,48 +40,68 @@ Win conditions:
 246
 */
 
-switch (playerMove) {
-	case [0,1,2]:
-  case [0,3,6]:
-  case [0,4,8]:
-  case [3,4,5]:
-  case [1,4,7]:
-  case [2,4,6]:
-  case [6,7,8]:
-  case [2,5,8]:
-  	return ('Player wins!')
-    break;
-  default:
-  	return ('Tie!')
-} 
+// switch (playerMove) {
+// 	case [0,1,2]:
+//   case [0,3,6]:
+//   case [0,4,8]:
+//   case [3,4,5]:
+//   case [1,4,7]:
+//   case [2,4,6]:
+//   case [6,7,8]:
+//   case [2,5,8]:
+//   	return ('Player wins!')
+//     break;
+//   default:
+//   	return ('Tie!')
+// }
 
-class Squares {
+class Square {
 	constructor(id) {
-		this.id = id
-    this.status = 0; 
+		this.id = id;
+    	this.status = 0;
 	}
   getId() {
-		return this.id; 
+		return this.id;
 	}
-  changeStatus(){
-	 	this.status = 1; 
+  changeStatus(owner){
+		// set status to whichever player owns the square
+	 	this.status = owner;
+	}
+	isOwned(){
+		return this.status != 0;
 	}
 }
 
 class gameBoard {
-	constructor(board){
-		this.board = board;
+	constructor(){
+		this.board = [];
+		this.createBoard();
 	}
 
 	createBoard(){
 		for(let i =0; i < 9; i++){
 			let square = new Square(i);
-			board.push(square);
+			this.board.push(square);
 		}
 	}
 	getBoard() {
-		return this.board; 
+		return this.board;
 	}
+	onClick(player, loc){
+		if (!this.board[loc].isOwned()){
+			this.board[loc].changeStatus(player);
+			console.log(`Player ${player} now owns square ${loc}`)
+		}
+	}
+}
+board = new gameBoard()
+const grid = [...document.querySelectorAll(".box")];
+for (let i = 0; i < grid.length; i++){
+	grid[i].addEventListener("click", (i) => {
+		console.log(i.target.id);
+		board.onClick(1, Number(i.target.id))
+
+	})
 }
 //contributors:
 //We the people of 100Devs, 100baristas, 
