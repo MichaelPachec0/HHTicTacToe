@@ -39,7 +39,15 @@ Win conditions:
 048
 246
 */
+// 0	0,1,2 +1
+//		0,3,6 +3
+//		0,4,8 +4
 
+
+// 0	+3,+4,+1
+// 2	+3,+2,-1
+// 6	-3,-2,+1
+// 8	-3,-4,-1
 // switch (playerMove) {
 // 	case [0,1,2]:
 //   case [0,3,6]:
@@ -54,51 +62,109 @@ Win conditions:
 //   default:
 //   	return ('Tie!')
 // }
+class AI {
+	constructor(){
+		// AI will start from 0 hardest to 3 easiest
+		this.type = 0;
+		this.moves = []
+		this.possible = [...Array(9).keys()]
+	}
+	choice(illegal_moves){
+		// Simple rules
+		// check if there are any immediate wining moves
+		// check if there are any player moves
+		// choose a random spot (TODO: more intelligent quessing)
+		// edges follow
+		// 0	+3,+4,+1
+		// 2	+3,+2,-1
+		// 6	-3,-2,+1
+		// 8	-3,-4,-1
 
+
+		if (this.moves){
+			this.possible = this.possible.filter(move => !(illegal_moves.find(e => move === e )))
+			// for
+
+
+		} else {
+			// starting off empty squares start of at a corner per xkcd, there should only be one square occupied
+			let ret = 0;
+			do {
+				let choice = Math.floor(Math.random()*3);
+				 ret = [0,2,6,8][choice]
+			}while (illegal_moves[0] === ret)
+			return ret;
+
+		}
+	}
+}
 class Square {
 	constructor(id) {
 		this.id = id;
     	this.status = 0;
+
 	}
-  getId() {
+  	getId() {
 		return this.id;
 	}
-  changeStatus(owner){
+  	changeStatus(owner){
 		// set status to whichever player owns the square
 	 	this.status = owner;
 	}
+	getOwner(){
+		return this.status;
+	}
 	isOwned(){
 		return this.status != 0;
+	}
+	reset(){
+		this.status = 0;
 	}
 }
 
 class gameBoard {
 	constructor(){
-		this.board = [];
-		this.createBoard();
+		this.board = this.createBoard();
+		this.moves = [];
+		this.ai = new AI();
 	}
 
 	createBoard(){
+		let ret = [];
 		for(let i =0; i < 9; i++){
-			let square = new Square(i);
-			this.board.push(square);
+			ret.push(new Square(i));
 		}
+		return ret;
 	}
 	getBoard() {
 		return this.board;
 	}
 	onClick(player, loc){
-		if (!this.board[loc].isOwned()){
+		if (!this.board[loc].isOwned()) {
 			this.board[loc].changeStatus(player);
 			console.log(`Player ${player} now owns square ${loc}`)
+			this.moves.push(loc);
+			this.moves.push(loc)
+			//AI's turn
+			let ai_loc = this.ai.choice(this.moves)
+			this.board[ai_loc].changeStatus(0)
+			this.moves.push(ai_loc)
+		} else {
+			console.log(`Square ${loc} is already owned by ${((this.board[loc].getOwner === 1) ? "Player":"AI")}`)
 		}
+	}
+	reset(){
+		for (const sq of this.board){
+			sq.reset();
+		}
+		//TODO: RESET the graphics portion of the board
 	}
 }
 board = new gameBoard()
 const grid = [...document.querySelectorAll(".box")];
 for (let i = 0; i < grid.length; i++){
 	grid[i].addEventListener("click", (i) => {
-		console.log(i.target.id);
+		// console.log(i.target.id);
 		board.onClick(1, Number(i.target.id))
 
 	})
