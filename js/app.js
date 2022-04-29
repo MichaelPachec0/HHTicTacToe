@@ -98,11 +98,9 @@ class AI {
 		// 2	+3,+2,-1
 		// 6	-3,-2,+1
 		// 8	-3,-4,-1
-
-
 		if (this.moves){
 			this.possible = this.possible.filter(move => !(illegal_moves.find(e => move === e )))
-			// for
+
 
 
 		} else {
@@ -110,8 +108,10 @@ class AI {
 			let ret = 0;
 			do {
 				let choice = Math.floor(Math.random()*3);
-				 ret = [0,2,6,8][choice]
-			}while (illegal_moves[0] === ret)
+				 ret = [0,2,6,8][choice];
+			} while (illegal_moves[0] === ret)
+			// let the ai keep track of their moves
+			this.moves.push(ret);
 			return ret;
 
 		}
@@ -163,7 +163,6 @@ class gameBoard {
 			this.board[loc].changeStatus(player);
 			console.log(`Player ${player} now owns square ${loc}`)
 			this.moves.push(loc);
-			this.moves.push(loc)
 			//AI's turn
 			let ai_loc = this.ai.choice(this.moves)
 			this.board[ai_loc].changeStatus(0)
@@ -177,6 +176,12 @@ class gameBoard {
 			sq.reset();
 		}
 		//TODO: RESET the graphics portion of the board
+	}
+	checkWinner(){
+		// Only check for winning moves after 4 moves
+		if (this.moves.length > 4){
+
+		}
 	}
 }
 board = new gameBoard()
