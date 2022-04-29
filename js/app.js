@@ -62,117 +62,241 @@ Win conditions:
 //   default:
 //   	return ('Tie!')
 // }
+const rowSize = 3;
+
 class AI {
-	constructor(){
-		// AI will start from 0 hardest to 3 easiest
-		this.type = 0;
-		this.moves = []
-		this.possible = [...Array(9).keys()]
-	}
-	choice(illegal_moves){
-		// Simple rules
-		// check if there are any immediate wining moves
-		// check if there are any player moves
-		// choose a random spot (TODO: more intelligent quessing)
-		// edges follow
-		// 0	+3,+4,+1
-		// 2	+3,+2,-1
-		// 6	-3,-2,+1
-		// 8	-3,-4,-1
-		if (this.moves){
-			this.possible = this.possible.filter(move => !(illegal_moves.find(e => move === e )))
+    constructor() {
+        // AI will start from 0 hardest to 3 easiest
+        this.type = 0;
+        //map with AI move to list of lists of winning strategies
+        this.aiTree = new Map(), this.moves = new Map();
+        this.possible = [...Array(rowSize ** 2).keys()]
+        this.playerMoves = [], this.aiMoves = [];
+        // hardcode for now, TODO: See they can be calculated
+        this.corners = [0, 2, 6, 8]
+        // this.lastPlayerMove = Number.MAX_SAFE_INTEGER;
+        // this.lastAiMove = Number.MAX_SAFE_INTEGER;
+    }
 
+    // ((i < (arr.length/rows)) ? 1 : 0) * 2 + i *
+    choice(playerMove) {
+        // Simple rules AI is 0
+        // check if there are any immediate wining moves
+        // check if there are any player moves
+        // choose a random spot (TODO: more intelligent guessing)
+        // edges follow
+        // 0	+3,+4,+1
+        // 2	+3,+2,-1
+        // 6	-3,-2,+1
+        // 8	-3,-4,-1
+        this.playerMoves.push(playerMove)
+        if (this.moves.size === 0) {
+            // this.possible = this.possible.filter(move => !([...illegal_moves.values()].find(e => move === e )))
+            // last move by player
+            // let last = illegal_moves[illegal_moves.length-1]
+            this.moves.set(playerMove, 1)
 
+            this.possible.splice(this.possible.findIndex(playerMove), 1)
+            //started mid
+            if (this.moves[0] === 5) {
 
-		} else {
-			// starting off empty squares start of at a corner per xkcd, there should only be one square occupied
-			let ret = 0;
-			do {
-				let choice = Math.floor(Math.random()*3);
-				 ret = [0,2,6,8][choice];
-			} while (illegal_moves[0] === ret)
-			// let the ai keep track of their moves
-			this.moves.push(ret);
-			return ret;
+            }
 
-		}
-	}
+        } else {
+            let ret = 0;
+            if (playerMove === 5) {
+                // if x started in the middle, pick a corner
+                do {
+                    let choice = Math.floor(Math.random() * 3);
+                    ret = this.corners[choice];
+                } while (playerMove === ret)
+                this.aiTree.set(this.aiTree.size, [])
+            } else {
+                // always pick middle
+                ret = 5
+            }
+            // let the AI keep track of their moves
+            this.moves.set(ret, 0);
+            this.aiMoves.push(ret);
+            return ret;
+
+        }
+    }
+
+    calc(choice) {
+        // need to calculate possible move-sets
+        // need to validate that moves are valid moves (ie that the player has not claimed those squares)
+        // possible moves will contain a list of lists
+        let possibleMoves = new Map(), possibleBlocks = new Map();
+        for (const move of this.aiMoves) {
+            if (move === 4) {
+                // check 0,1,2,3
+                for (let i = 0; i < rowSize + 1; i++) {
+                    //means that player has taken the square
+                    if (!(this.moves.get(i) === 1)) {
+                        // means that the square is a corner
+                        if (this.corners.includes(i)) {
+                            // since the AI took the middle square only vertical and horizontal moves are possible
+                            let hCount = 0, vCount = 0;
+                            for (let x = 1; x < rowSize; i++){
+                                // check both simultaneously
+                                let vertical = x * rowSize, horizontal = x + rowSize;
+                                if (this.moves.get(vertical) === 1){
+                                    vCount += 1;
+                                } else {
+
+                                }
+                                if (this.moves.get(horizontal) === 1){
+                                    hCount += 1;
+                                }
+                            }
+                        }
+
+                    } else {
+                        //	means that AI has gotten the square or no one has
+                        let adjacent = (move - i) + move
+                        // square is ours
+                        if (this.moves.get(i) === 0) {
+                            if (this.moves.get(adjacent) === undefined) {
+                                // only one square needed to win
+                                if (possibleMoves.get(1) === undefined)
+                                    possibleMoves.push([adjacent])
+                            } else {
+                                // player has taken the adjacent square
+                                // for now ignore SUGGESTION: Defensive CPU?
+                                if (this.corners.includes(i)) {
+                                    if (i=== 0){
+                                        // check only once horizontal =  (y)+(x*3) vertical = (y * 3) + x
+                                    }
+                                    // TODO: refactor hardcoded values
+                                    let count = 0;
+                                    let block = [];
+                                    for (let x = 0; x < rowSize; x++) {
+                                        if (this.playerMoves.get(x * rowSize + i) === 1) {
+                                            count++;
+                                        } else {
+                                            block.push(x * rowSize + i)
+                                        }
+                                    }
+
+                                } else {
+
+                                }
+                                let key = rowSize - count
+                                if (possibleBlocks.get(key) == undefined) {
+                                    possibleBlocks.set(key, [block])
+                                }
+                                possibleBlocks.set(key, possibleBlocks.get(key).push(block))
+                            }
+                        } else {
+
+                        }
+                        // AI has the square or the square is not taken this.moves.get(adjacent) === undefined
+
+                        if (this.moves.get(adjacent) === 0) {
+
+                        }
+                    }
+                    // if (!this.playerMoves.find(i)){
+                    // 	if (!this.playerMoves.find(move - i)){
+                    //
+                    // 	}
+                }
+            }
+        }
+
+    }
 }
+
 class Square {
-	constructor(id) {
-		this.id = id;
-    	this.status = 0;
+    constructor(id) {
+        this.id = id;
+        this.status = 0;
 
-	}
-  	getId() {
-		return this.id;
-	}
-  	changeStatus(owner){
-		// set status to whichever player owns the square
-	 	this.status = owner;
-	}
-	getOwner(){
-		return this.status;
-	}
-	isOwned(){
-		return this.status != 0;
-	}
-	reset(){
-		this.status = 0;
-	}
+    }
+
+    getId() {
+        return this.id;
+    }
+
+    changeStatus(owner) {
+        // set status to whichever player owns the square
+        this.status = owner;
+    }
+
+    displayOwner(owner) {
+        // for now assume ai is
+    }
+
+    getOwner() {
+        return this.status;
+    }
+
+    isOwned() {
+        return this.status != 0;
+    }
+
+    reset() {
+        this.status = 0;
+    }
 }
 
-class gameBoard {
-	constructor(){
-		this.board = this.createBoard();
-		this.moves = [];
-		this.ai = new AI();
-	}
+class GameBoard {
+    constructor() {
+        this.board = this.createBoard();
+        this.moves = new Map();
+        this.ai = new AI();
+    }
 
-	createBoard(){
-		let ret = [];
-		for(let i =0; i < 9; i++){
-			ret.push(new Square(i));
-		}
-		return ret;
-	}
-	getBoard() {
-		return this.board;
-	}
-	onClick(player, loc){
-		if (!this.board[loc].isOwned()) {
-			this.board[loc].changeStatus(player);
-			console.log(`Player ${player} now owns square ${loc}`)
-			this.moves.push(loc);
-			//AI's turn
-			let ai_loc = this.ai.choice(this.moves)
-			this.board[ai_loc].changeStatus(0)
-			this.moves.push(ai_loc)
-		} else {
-			console.log(`Square ${loc} is already owned by ${((this.board[loc].getOwner === 1) ? "Player":"AI")}`)
-		}
-	}
-	reset(){
-		for (const sq of this.board){
-			sq.reset();
-		}
-		//TODO: RESET the graphics portion of the board
-	}
-	checkWinner(){
-		// Only check for winning moves after 4 moves
-		if (this.moves.length > 4){
+    createBoard() {
+        let ret = [];
+        for (let i = 0; i < rowSize ** 2; i++) {
+            ret.push(new Square(i));
+        }
+        return ret;
+    }
 
-		}
-	}
+    getBoard() {
+        return this.board;
+    }
+
+    onClick(player, loc) {
+        if (!this.board[loc].isOwned()) {
+            this.board[loc].changeStatus(player);
+            console.log(`Player ${player} now owns square ${loc}`)
+            // this.moves.push(loc);
+            this.moves.set(loc, player)
+            this.checkWinner()
+            //AI's turn
+            let ai_loc = this.ai.choice(loc)
+            this.board[ai_loc].changeStatus(0)
+            this.moves.set(ai_loc, 0)
+            this.checkWinner()
+        } else {
+            console.log(`Square ${loc} is already owned by ${((this.board[loc].getOwner === 1) ? "Player" : "AI")}`)
+        }
+    }
+
+    reset() {
+        for (const sq of this.board) {
+            sq.reset();
+        }
+        //TODO: RESET the graphics portion of the board
+    }
+
+    checkWinner() {
+        // Only check for winning moves after 5 moves
+        if (this.moves.size > 4) {
+        }
+    }
 }
-board = new gameBoard()
-const grid = [...document.querySelectorAll(".box")];
-for (let i = 0; i < grid.length; i++){
-	grid[i].addEventListener("click", (i) => {
-		// console.log(i.target.id);
-		board.onClick(1, Number(i.target.id))
 
-	})
+board = new GameBoard()
+for (let square of [...document.querySelectorAll(".box")]) {
+    square.addEventListener("click", (i) => {
+        board.onClick(1, Number(i.target.id))
+
+    })
 }
 //contributors:
 //We the people of 100Devs, 100baristas, 
