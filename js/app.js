@@ -9,17 +9,17 @@ const box = document.querySelectorAll('.box')
 
 // this function will determine the winner and alert it.
 const winner = () => {
-	
+
 }
 
 // this function will decide if the game was a tie and will alert if the game is a tie,
 const tie = () => {
-	
+
 }
 
 // this function will be used to reset the board when the restart button is clicked.
 const restart = () => {
-	
+
 }
 
 
@@ -85,7 +85,7 @@ const rowSize = 3;
 
 class AI {
     constructor() {
-        // AI will start from 0 hardest to 3 easiest
+        // AI will start from 0 hardest to 3 easiest, TODO: Allow this to be set by the parent class
         this.type = 0;
         //map with AI move to list of lists of winning strategies
         this.aiTree = new Map(), this.moves = new Map();
@@ -114,13 +114,11 @@ class AI {
             // last move by player
             // let last = illegal_moves[illegal_moves.length-1]
             this.moves.set(playerMove, 1)
-
             this.possible.splice(this.possible.findIndex(playerMove), 1)
             //started mid
-            if (this.moves[0] === 5) {
+            if (playerMove === 5) {
 
             }
-
         } else {
             let ret = 0;
             if (playerMove === 5) {
@@ -157,15 +155,15 @@ class AI {
                         if (this.corners.includes(i)) {
                             // since the AI took the middle square only vertical and horizontal moves are possible
                             let hCount = 0, vCount = 0;
-                            for (let x = 1; x < rowSize; i++){
+                            for (let x = 1; x < rowSize; i++) {
                                 // check both simultaneously
                                 let vertical = x * rowSize, horizontal = x + rowSize;
-                                if (this.moves.get(vertical) === 1){
+                                if (this.moves.get(vertical) === 1) {
                                     vCount += 1;
                                 } else {
 
                                 }
-                                if (this.moves.get(horizontal) === 1){
+                                if (this.moves.get(horizontal) === 1) {
                                     hCount += 1;
                                 }
                             }
@@ -184,7 +182,7 @@ class AI {
                                 // player has taken the adjacent square
                                 // for now ignore SUGGESTION: Defensive CPU?
                                 if (this.corners.includes(i)) {
-                                    if (i=== 0){
+                                    if (i === 0) {
                                         // check only once horizontal =  (y)+(x*3) vertical = (y * 3) + x
                                     }
                                     // TODO: refactor hardcoded values
@@ -208,7 +206,6 @@ class AI {
                                 possibleBlocks.set(key, possibleBlocks.get(key).push(block))
                             }
                         } else {
-
                         }
                         // AI has the square or the square is not taken this.moves.get(adjacent) === undefined
 
@@ -230,7 +227,7 @@ class AI {
 class Square {
     constructor(id) {
         this.id = id;
-        this.status = 0;
+        this.status = -1;
 
     }
 
@@ -238,7 +235,7 @@ class Square {
         return this.id;
     }
 
-    changeStatus(owner) {
+    setOwner(owner) {
         // set status to whichever player owns the square
         this.status = owner;
     }
@@ -252,7 +249,7 @@ class Square {
     }
 
     isOwned() {
-        return this.status != 0;
+        return this.status != -1;
     }
 
     reset() {
@@ -281,16 +278,19 @@ class GameBoard {
 
     onClick(player, loc) {
         if (!this.board[loc].isOwned()) {
-            this.board[loc].changeStatus(player);
+            this.board[loc].setOwner(player);
             console.log(`Player ${player} now owns square ${loc}`)
             // this.moves.push(loc);
             this.moves.set(loc, player)
-            this.checkWinner()
+            this.checkWinner(loc, 1)
             //AI's turn
             let ai_loc = this.ai.choice(loc)
-            this.board[ai_loc].changeStatus(0)
-            this.moves.set(ai_loc, 0)
-            this.checkWinner()
+            if (!this.board[ai_loc].isOwned()){
+                this.board[ai_loc].setOwner(0)
+                this.moves.set(ai_loc, 0)
+                this.checkWinner()
+            }
+
         } else {
             console.log(`Square ${loc} is already owned by ${((this.board[loc].getOwner === 1) ? "Player" : "AI")}`)
         }
@@ -303,20 +303,48 @@ class GameBoard {
         //TODO: RESET the graphics portion of the board
     }
 
-    checkWinner() {
-        // Only check for winning moves after 5 moves
+    checkWinner(move, player) {
+        // Only check for winning moves after 5 moves, there no possible win before that
         if (this.moves.size > 4) {
+            if (this.moves.size === rowSize ** 2) {
+                console.log(`${player} has tied`)
+            }
+            for (let i = 0; i < 7; i++) {
+                if (this.moves.get(i) === player) {
+                    if (!i % 3) {
+                        if (player === this.moves.get(i + 1) && this.moves.get(i + 2) === player) {
+                            // horizontal win
+                            console.log(`${player} has won!`)
+                        }
+                    } else if (i < rowSize) {
+                        if (player === this.moves.get(i + 3) &&  this.moves.get(i + 6) === player) {
+                            //vertical win
+                            console.log(`${player} has won!`)
+                        }
+                        if (!i % 2) {
+                            // only check 0 and 2 since 6 and 8 are the same cross win
+                            if (player === this.moves.get(((i === 0) ? 4 : 2) * 1) &&  this.moves.get(((i === 0) ? 4 : 2) * 2) === player) {
+                                //cross win
+                                console.log(`${player} has won!`)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
-board = new GameBoard()
+
+const board = new GameBoard()
 for (let square of box) {
     square.addEventListener("click", (i) => {
         board.onClick(1, Number(i.target.id))
 
     })
 }
+restartButton.addEventListener("click", board.reset())
+
 //contributors:
 //We the people of 100Devs, 100baristas, 
 //Cormasaurus#4787
