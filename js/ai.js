@@ -106,7 +106,7 @@ export class Ai {
         }
         const res = this.p.checkWinnerHelper(adversary, moves.length, true);
         if (res !== null) {
-            return this.score.get(res) - depth;
+            return (player === 1)? this.score.get(res) + depth: this.score.get(res) - depth;
         }
         for (const candidate of possible){
             this.p.setBoardSquare = {square: candidate, player: player};
